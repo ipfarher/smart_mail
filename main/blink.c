@@ -27,6 +27,7 @@ void blink_task(void *pvParameter)
        Technical Reference for a list of pads and their default
        functions.)
     */
+	printf("This is blink_task!\n");
     gpio_pad_select_gpio(BLINK_GPIO);
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
@@ -40,32 +41,38 @@ void blink_task(void *pvParameter)
     }
 }
 
+void print_sys_info(void *pvParameter)
+{
+    /* Printing system information */
+	esp_chip_info_t chip_info;
+	printf("This is SmartMail!\n");
+//	int i=0;
+	while(1) {
+		/* Print chip information */
+
+		    esp_chip_info(&chip_info);
+		    printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
+		            chip_info.cores,
+		            (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
+		            (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+
+		    printf("silicon revision %d, ", chip_info.revision);
+
+		    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
+		            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+
+		    for (int i = 10; i >= 0; i--) {
+		        printf("Restarting in %d seconds...\n", i);
+		        vTaskDelay(1000 / portTICK_PERIOD_MS);
+		    }
+		    printf("Restarting now.\n");
+    }
+}
+
+
+
 void app_main()
 {
     xTaskCreate(&blink_task, "blink_task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
-
-
-    printf("This is SmartMail!\n");
-
-        /* Print chip information */
-        esp_chip_info_t chip_info;
-        esp_chip_info(&chip_info);
-        printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
-                chip_info.cores,
-                (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-                (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-        printf("silicon revision %d, ", chip_info.revision);
-
-        printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-                (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-
-        for (int i = 10; i >= 0; i--) {
-            printf("Restarting in %d seconds...\n", i);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        printf("Restarting now.\n");
-        fflush(stdout);
-        esp_restart();
-
+    xTaskCreate(&print_sys_info, "print_sys_info", 4095, NULL, 5, NULL);
 }
